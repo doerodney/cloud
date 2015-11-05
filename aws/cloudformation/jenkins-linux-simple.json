@@ -1,4 +1,8 @@
 {
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	
+	"Description" : "Creates a Jenkins instance on a Linux EC2 instance.",
+	
     "Parameters" : {
         "KeyName" : {
             "Description" : "Name of an existing EC2 KeyPair file (.pem) to use to create EC2 instances.  If the file name is foo.pem, specify foo",
