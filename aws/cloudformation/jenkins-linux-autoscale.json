@@ -1,0 +1,144 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+  
+	"Description": "Creates an auto-scaling group of Jenkins Linux instances.  For demonstration only.",
+
+	"Parameters" : {
+        "KeyName" : {
+            "Description" : "Name of an existing EC2 KeyPair file (.pem) to use to create EC2 instances.  If the file name is foo.pem, specify foo",
+            "Type" : "String"   
+        },
+        "JenkinsEC2InstanceType" : {
+            "Description" : "EC2 instance type, reference this parameter to insure consistency",
+            "Type"        : "String",
+            "Default"     : "t2.micro",
+            "AllowedValues" : [
+                "t2.small",
+                "t2.micro",
+                "t2.medium",
+                "m3.medium",
+                "m3.large"
+            ],
+            "ConstraintDescription" : "Must be a valid EC2 instance type"
+        }
+    },
+	
+	"Mappings" : {
+        "RegionMap" : {
+            "ap-northeast-1" : {
+                "AMI" : "ami-383c1956"
+            },
+            "ap-southeast-1" : {
+                "AMI" : "ami-c9b572aa"
+            },
+            "ap-southeast-2": {
+                "AMI" : "ami-48d38c2b"
+            },
+            "us-east-1" : {
+                "AMI" : "ami-60b6c60a"
+            },
+            "eu-west-1" : {
+                "AMI" : "ami-bff32ccc"
+            },
+            "sa-east-1" : {
+                "AMI" : "ami-6817af04"
+            },
+            "us-west-1" : {
+                "AMI" : "ami-d5ea86b5"
+            },
+            "us-west-2" : {
+                "AMI" : "ami-f0091d91"
+            }
+        }
+    },
+  
+	"Resources" : {
+		"JenkinsLinuxSecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : "Security Group for Jenkins on Linux.",
+                "SecurityGroupIngress" : [
+                    {
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "22",
+                        "ToPort"     : "22",
+                        "CidrIp"     : "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "80",
+                        "ToPort"     : "80",
+                        "CidrIp"     : "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "443",
+                        "ToPort"     : "443",
+                        "CidrIp"     : "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "8080",
+                        "ToPort"     : "8080",
+                        "CidrIp"     : "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+		"JenkinsAutoScalingGroupLaunchConfig" : {
+			"Type" : "AWS::AutoScaling::LaunchConfiguration",
+			"Properties" : {
+				"KeyName" : { "Ref" : "KeyName" },
+				"ImageId" : { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "AMI" ] },
+				"SecurityGroups" : [ { "Ref" : "JenkinsLinuxSecurityGroup" } ],
+				"InstanceType" : { "Ref" : "JenkinsEC2InstanceType" },
+				"UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
+								"#!/bin/bash -ex \n",
+								"yum -y install java", "\n",
+								"wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo", "\n",
+								"rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key", "\n",
+								"yum -y install jenkins", "\n",
+								"service jenkins start", "\n",
+								"chkconfig jenkins on", "\n"
+							]
+						]
+					}
+				}
+			}
+		},
+	  
+		"JenkinsAutoScalingGroup" : {
+		  "Type" : "AWS::AutoScaling::AutoScalingGroup",
+		  "Properties" : {			
+			"LaunchConfigurationName" : { "Ref" : "JenkinsAutoScalingGroupLaunchConfig" },
+			"AvailabilityZones" : { "Fn::GetAZs" : { "Ref" : "AWS::Region" } },
+			"MinSize" : "0",
+			"MaxSize" : "1",
+			"DesiredCapacity": "1",
+			"HealthCheckGracePeriod" : 60,
+			"Tags": [{"Key": "Name", "Value" : "Jenkins", "PropagateAtLaunch" : "true"}]
+		  }
+		},
+
+		"JenkinsScheduledScaleUp": {
+		  "Type": "AWS::AutoScaling::ScheduledAction",
+		  "Properties": {
+			"AutoScalingGroupName" : { "Ref" : "JenkinsAutoScalingGroup" },
+			"MaxSize": "1",
+			"MinSize": "1",
+			"Recurrence": "30 18 * * *"
+		  }
+		},
+
+		"JenkinsScheduledScaleDown": {
+		  "Type": "AWS::AutoScaling::ScheduledAction",
+		  "Properties": {
+			"AutoScalingGroupName" : { "Ref" : "JenkinsAutoScalingGroup" },
+			"MaxSize": "0",
+			"MinSize": "0",
+			"Recurrence": "00 19 * * *"
+		  }
+		}
+	}
+
+}
