@@ -57,46 +57,67 @@
                 "UserData" : { "Fn::Base64" : "80" }    
             }
         },
-		"Metadata" : {
-			"AWS::CloudFormation::Init" : {
-				"config" : {
-					"packages" : {
-					},
-					"groups" : {
-					},
-					"users" : {
-					},
-					"sources" : {
-					},
-					"files" : {
-					},
-					"commands" : {
-						"00_install_java" : {
-							"command" : "yum -y install java"
-						},
-						"01_add_jenkins_repo_to_yum_repos" : {
-							"command" : "wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo"
-						},
-						"02_add_jenkins_key_to_system" : {
-							"command" : "rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key"
-						},
-						"03_yum_install_jenkins" : {
-							"command" : "yum -y install jenkins"
-						},
-						"04_start_jenkins_service" : {
-							"command" : "service jenkins start"
-						},
-						"05_enable_jenkins_service_on_startup" : {
-							"command" : "chkconfig jenkins on"
+		
+		"JenkinsAutoScalingGroupLaunchConfig" : {
+			"Type" : "AWS::AutoScaling::LaunchConfiguration",
+			"Properties" : {
+				"KeyName" : { "Ref" : "KeyName" },
+				"ImageId" : { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "AMI" ] },
+				"InstanceType" : { "Ref" : "EC2InstanceType" },
+				"Metadata" : {
+					"AWS::CloudFormation::Init" : {
+						"config" : {
+							"packages" : {
+							},
+							"groups" : {
+							},
+							"users" : {
+							},
+							"sources" : {
+							},
+							"files" : {
+							},
+							"commands" : {
+								"00_install_java" : {
+									"command" : "yum -y install java"
+								},
+								"01_add_jenkins_repo_to_yum_repos" : {
+									"command" : "wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo"
+								},
+								"02_add_jenkins_key_to_system" : {
+									"command" : "rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key"
+								},
+								"03_yum_install_jenkins" : {
+									"command" : "yum -y install jenkins"
+								},
+								"04_start_jenkins_service" : {
+									"command" : "service jenkins start"
+								},
+								"05_enable_jenkins_service_on_startup" : {
+									"command" : "chkconfig jenkins on"
+								}
+							},
+							"services" : {
+							}
 						}
-					},
-					"services" : {
 					}
 				}
 			}
+		},
+		
+		"JenkinsAutoScalingGroup" : {
+			"Type" : "AWS::AutoScaling::AutoScalingGroup",
+			"Properties" : {
+				"LaunchConfigurationName" : { "Ref" : "JenkinsAutoScalingGroupLaunchConfig" },
+				"MinSize" : "0",
+				"MaxSize" : "1",
+				"DesiredCapacity": "1",
+				"HealthCheckGracePeriod" : 60,
+				"Tags": [{"Key": "Name", "Value" : "Jenkins", "PropagateAtLaunch" : "true"}]
+			}
 		}
-    },
-    
+	},
+		
     "Outputs" : {
         "JenkinsURL": {
             "Value": {
