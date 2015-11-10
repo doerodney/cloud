@@ -6,7 +6,7 @@
     "Parameters" : {
         "KeyName" : {
             "Description" : "Name of an existing EC2 KeyPair file (.pem) to use to create EC2 instances.  If the file name is foo.pem, specify foo",
-            "Type" : "String"   
+            "Type" : "AWS::EC2::KeyPair::KeyName"   
         },
         "EC2InstanceType" : {
             "Description" : "EC2 instance type, reference this parameter to insure consistency",
