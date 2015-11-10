@@ -1,7 +1,7 @@
 {
 	"AWSTemplateFormatVersion" : "2010-09-09",
 	
-	"Description" : "Creates a Jenkins instance on a Linux EC2 instance.",
+	"Description" : "Creates a Jenkins instance on a Windows EC2 instance.",
 	
     "Parameters" : {
         "KeyName" : {
@@ -26,47 +26,41 @@
     "Mappings" : {
         "RegionMap" : {
             "ap-northeast-1" : {
-                "AMI" : "ami-383c1956"
+                "AMI" : "ami-3e93fe3e"
             },
             "ap-southeast-1" : {
-                "AMI" : "ami-c9b572aa"
+                "AMI" : "ami-faedfea8"
             },
             "ap-southeast-2": {
-                "AMI" : "ami-48d38c2b"
-            },
+                "AMI" : "ami-7bda9041"
+            },           
             "eu-west-1" : {
-                "AMI" : "ami-bff32ccc"
+                "AMI" : "ami-2fcbf458"
             },
 			"eu-west-2" : {
-                "AMI" : "ami-bc5b48d0"
+                "AMI" : "ami-f2f5f9ef"
             },
             "sa-east-1" : {
-                "AMI" : "ami-6817af04"
+                "AMI" : "ami-02952d6e"
             },
 			"us-east-1" : {
-                "AMI" : "ami-60b6c60a"
+                "AMI" : "ami-1df0ac78"
             },
             "us-west-1" : {
-                "AMI" : "ami-d5ea86b5"
+                "AMI" : "ami-91f93ad5"
             },
             "us-west-2" : {
-                "AMI" : "ami-f0091d91"
+                "AMI" : "ami-f8f715cb"
             }
         }
     },
     
     "Resources" : {
-		"JenkinsLinuxSecurityGroup" : {
+		"JenkinsWindowsSecurityGroup" : {
             "Type" : "AWS::EC2::SecurityGroup",
             "Properties" : {
-                "GroupDescription" : "Security Group for Jenkins on Linux.",
-                "SecurityGroupIngress" : [
-                    {
-                        "IpProtocol" : "tcp",
-                        "FromPort"   : "22",
-                        "ToPort"     : "22",
-                        "CidrIp"     : "0.0.0.0/0"
-                    },
+                "GroupDescription" : "Security Group for Jenkins on Windows.",
+                "SecurityGroupIngress" : [                    
                     {
                         "IpProtocol" : "tcp",
                         "FromPort"   : "80",
@@ -79,6 +73,24 @@
                         "ToPort"     : "443",
                         "CidrIp"     : "0.0.0.0/0"
                     },
+					{
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "3389",
+                        "ToPort"     : "3389",
+                        "CidrIp"     : "0.0.0.0/0"
+                    },
+					{
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "5985",
+                        "ToPort"     : "5985",
+                        "CidrIp"     : "0.0.0.0/0"
+                    },
+					{
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "5986",
+                        "ToPort"     : "5986",
+                        "CidrIp"     : "0.0.0.0/0"
+                    },					
                     {
                         "IpProtocol" : "tcp",
                         "FromPort"   : "8080",
@@ -95,19 +107,25 @@
                 "KeyName" : { "Ref" : "KeyName" },
                 "ImageId" : { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "AMI" ] },
                 "InstanceType" : { "Ref" : "EC2InstanceType" },
-				"SecurityGroups" : [ { "Ref" :  "JenkinsLinuxSecurityGroup" } ],
-                "UserData" : { "Fn::Base64" : { "Fn::Join" : [ "", [
-								"#!/bin/bash -ex \n",
-								"yum -y install java", "\n",
-								"wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo", "\n",
-								"rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key", "\n",
-								"yum -y install jenkins", "\n",
-								"service jenkins start", "\n",
-								"chkconfig jenkins on", "\n"
+				"SecurityGroups" : [ { "Ref" :  "JenkinsWindowsSecurityGroup" } ],  
+				"UserData" : { 	"Fn::Base64" : { "Fn::Join" : [ "", [
+								"<powershell>\n",
+									"Set-ExecutionPolicy Unrestricted\n",
+									"Import-Module AWSPowerShell\n",
+									"Set-AwsCredentials -AccessKey EBA  -SecretKey dcF \n",
+									"New-Item -ItemType Directory -Path C:/Users/Public/DevOps/Deployment -Force | Out-Null\n",
+									"Set-Location -Path C:/Users/Public/DevOps/Deployment\n",
+									"Copy-S3Object -BucketName author-it-doit -Key downloads/jre/jre-8u65-windows-x64.exe -LocalFile C:/Users/Public/DevOps/Downloads/JRE/jre-8u65-windows-x64.exe -Force\n",
+									"Copy-S3Object -BucketName author-it-doit -Key downloads/jre/java.settings.cfg -LocalFile C:/Users/Public/DevOps/Downloads/JRE/java.settings.cfg\n",
+									"Copy-S3Object -BucketName author-it-doit -Key downloads/jenkins/1.637/windows/jenkins.msi -LocalFile C:/Users/Public/DevOps/Downloads/Jenkins/jenkins.msi\n",
+									"C:/Users/Public/DevOps/Downloads/JRE/jre-8u65-windows-x64.exe INSTALLCFG=C:\\Users\\Public\\DevOps\\Downloads\\JRE\\java.settings.cfg\n",
+									"msiexec /package C:/Users/Public/DevOps/Downloads/Jenkins/jenkins.msi /quiet\n",
+									"Start-Service -Name jenkins\n",								
+								"</powershell>\n"
 							]
 						]
 					}
-				}    
+				}
             }
         }
 	},
