@@ -1,0 +1,41 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	
+	"Description" : "Creates a security group for Windows Remote Management.",
+	
+    "Parameters" : {
+    },
+    
+	"Mappings" : {
+    },
+    
+    "Resources" : {
+		"WinRmSecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : "WinRM Security Group",
+                "SecurityGroupIngress" : [                                        
+					{
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "5985",
+                        "ToPort"     : "5985",
+                        "CidrIp"     : "0.0.0.0/0"
+                    },
+					{
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "5986",
+                        "ToPort"     : "5986",
+                        "CidrIp"     : "0.0.0.0/0"
+                    }
+                ]
+            }
+        }        
+	},
+		
+    "Outputs" : {
+        "WinRmSecurityGroupId": {
+            "Value": { "Ref" : "WinRmSecurityGroup" },
+            "Description" : "WinRM Security Group Id"
+        }
+    }
+}

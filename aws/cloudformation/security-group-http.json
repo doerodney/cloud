@@ -1,0 +1,35 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	
+	"Description" : "Creates a security group for HTTP.",
+	
+    "Parameters" : {
+    },
+    
+	"Mappings" : {
+    },
+    
+    "Resources" : {
+		"HTTPSecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : "HTTP Security Group",
+                "SecurityGroupIngress" : [                                        
+					{
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "80",
+                        "ToPort"     : "80",
+                        "CidrIp"     : "0.0.0.0/0"
+                    }
+                ]
+            }
+        }        
+	},
+		
+    "Outputs" : {
+        "HTTPSecurityGroupId": {
+            "Value": { "Ref" : "HTTPSecurityGroup" },
+            "Description" : "HTTP Security Group Id"
+        }
+    }
+}

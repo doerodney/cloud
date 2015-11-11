@@ -1,0 +1,35 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	
+	"Description" : "Creates a security group for RDP.",
+	
+    "Parameters" : {
+    },
+    
+	"Mappings" : {
+    },
+    
+    "Resources" : {
+		"RDPSecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : "RDP Security Group",
+                "SecurityGroupIngress" : [                                        
+					{
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "3389",
+                        "ToPort"     : "3389",
+                        "CidrIp"     : "0.0.0.0/0"
+                    }
+                ]
+            }
+        }        
+	},
+		
+    "Outputs" : {
+        "RDPSecurityGroupId": {
+            "Value": { "Ref" : "RDPSecurityGroup" },
+            "Description" : "RDP Security Group Id"
+        }
+    }
+}

@@ -1,0 +1,35 @@
+{
+	"AWSTemplateFormatVersion" : "2010-09-09",
+	
+	"Description" : "Creates a security group for Jenkins.",
+	
+    "Parameters" : {
+    },
+    
+	"Mappings" : {
+    },
+    
+    "Resources" : {
+		"JenkinsSecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : "Jenkins Security Group",
+                "SecurityGroupIngress" : [                                        
+					{
+                        "IpProtocol" : "tcp",
+                        "FromPort"   : "8080",
+                        "ToPort"     : "8080",
+                        "CidrIp"     : "0.0.0.0/0"
+                    }
+                ]
+            }
+        }        
+	},
+		
+    "Outputs" : {
+        "JenkinsSecurityGroupId": {
+            "Value": { "Ref" : "JenkinsSecurityGroup" },
+            "Description" : "Jenkins Security Group Id"
+        }
+    }
+}
