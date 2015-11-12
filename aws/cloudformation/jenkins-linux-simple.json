@@ -21,36 +21,60 @@
                 "m3.large"
             ],
             "ConstraintDescription" : "Must be a valid EC2 instance type"
-        }
+        },
+		"StorageVolumeId" : {
+			"Description" : "The identifer of an EC2 volume that will be attached to this instance.",
+			"Type"        : "AWS::EC2::Volume::Id",
+			"ConstraintDescription" : "Must be a valid EC2 Volume instance id (vol-XXXXX)"
+		},
+		"Environment" : {
+			"Description" : "The Author-it environment name with which to associate this.",
+			"Type" : "String",
+			"AllowedValues" : [
+				"TestAws",
+				"Dev",
+				"DevOps"
+			],
+			"Default" : "DevOps"
+		}		
     },
     "Mappings" : {
         "RegionMap" : {
             "ap-northeast-1" : {
-                "AMI" : "ami-383c1956"
+                "AMI" : "ami-383c1956",
+				"RegionAvailabilityZone" : "ap-northeast-1c"
             },
             "ap-southeast-1" : {
-                "AMI" : "ami-c9b572aa"
+                "AMI" : "ami-c9b572aa",
+				"RegionAvailabilityZone" : "ap-southeast-1b"
             },
             "ap-southeast-2": {
-                "AMI" : "ami-48d38c2b"
+                "AMI" : "ami-48d38c2b",
+				"RegionAvailabilityZone" : "ap-southeast-2b"
+            },
+			"eu-central-1" : {
+                "AMI" : "ami-bc5b48d0",
+				"RegionAvailabilityZone" : "eu-central-1b"
             },
             "eu-west-1" : {
-                "AMI" : "ami-bff32ccc"
-            },
-			"eu-west-2" : {
-                "AMI" : "ami-bc5b48d0"
+                "AMI" : "ami-bff32ccc",
+				"RegionAvailabilityZone" : "eu-west-1c"
             },
             "sa-east-1" : {
-                "AMI" : "ami-6817af04"
+                "AMI" : "ami-6817af04",
+				"RegionAvailabilityZone" : "sa-east-1c"
             },
 			"us-east-1" : {
-                "AMI" : "ami-60b6c60a"
+                "AMI" : "ami-60b6c60a",
+				"RegionAvailabilityZone" : "us-east-1e"
             },
             "us-west-1" : {
-                "AMI" : "ami-d5ea86b5"
+                "AMI" : "ami-d5ea86b5",
+				"RegionAvailabilityZone" : "us-west-1c"
             },
             "us-west-2" : {
-                "AMI" : "ami-f0091d91"
+                "AMI" : "ami-f0091d91",
+				"RegionAvailabilityZone" : "us-west-2c"
             }
         }
     },
@@ -90,6 +114,7 @@
         },
 
         "EC2Instance" : {
+			"AvailabilityZone" : { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "RegionAvailabilityZone" ] },
             "Type" : "AWS::EC2::Instance",
             "Properties" : {
                 "KeyName" : { "Ref" : "KeyName" },
@@ -127,7 +152,19 @@
                 ]
             },
             "Description" : "URL of the Jenkins instance"
-        }
+        },
+		"Region" : {
+			"Value" : { "Ref" : "AWS::Region" },
+			"Description" : "AWS Region used for instantiation"
+		},
+		"AvailabilityZone" : {
+			"Value" : { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "RegionAvailabilityZone" ] },
+			"Description" : "Availability zone used with AWS region"
+		},
+		"Environment" : {
+			"Value" : { "Ref" : "Environment" },
+			"Description" : "Value of the Environment parameter"
+		}
     }
 }
 

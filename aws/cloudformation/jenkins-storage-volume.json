@@ -31,14 +31,14 @@
 			"ap-southeast-1" : {
 				"RegionAvailabilityZone" : "ap-southeast-1b"
 			},
-			"ap-southeast-2": {
+			"ap-southeast-2" : {
 				"RegionAvailabilityZone" : "ap-southeast-2b"
+			},
+			"eu-central-1" : {
+				"RegionAvailabilityZone" : "eu-central-1b"
 			},
 			"eu-west-1" : {
 				"RegionAvailabilityZone" : "eu-west-1c"
-			},
-			"eu-west-2" : {
-				"RegionAvailabilityZone" : "eu-west-2a"
 			},
 			"sa-east-1" : {
 				"RegionAvailabilityZone" : "sa-east-1c"
@@ -47,7 +47,7 @@
 				"RegionAvailabilityZone" : "us-east-1e"
 			},
 			"us-west-1" : {
-				"RegionAvailabilityZone" : "us-west-1b"
+				"RegionAvailabilityZone" : "us-west-1c"
 			},
 			"us-west-2" : {
 				"RegionAvailabilityZone" : "us-west-2c"
