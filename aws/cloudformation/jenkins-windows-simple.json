@@ -80,6 +80,22 @@
 	},
 
 	"Resources" : {
+		"JenkinsWindowsInstanceRole": {
+			"Type": "AWS::IAM::Role",
+			"Properties": {
+				"AssumeRolePolicyDocument": {
+					"Version" : "2012-10-17",
+					"Statement": [ {
+					"Effect": "Allow",
+					"Principal": {
+					"Service": [ "ec2.amazonaws.com" ]
+					},
+					"Action": [ "sts:AssumeRole" ]
+					} ]
+				},
+				"Path": "/"
+			}
+		},
 		"JenkinsWindowsSecurityGroup" : {
 			"Type" : "AWS::EC2::SecurityGroup",
 			"Properties" : {
@@ -124,21 +140,26 @@
 				]
 			}
 		},
-
+		"JenkinsWindowsInstanceProfile": {
+			"Type": "AWS::IAM::InstanceProfile",
+			"Properties": {
+				"Path": "/",
+				"Roles": [ { "Ref": "JenkinsWindowsInstanceRole" } ]
+			}		
+		},
 		"EC2Instance" : {
 			"Type" : "AWS::EC2::Instance",
 			"Properties" : {
 				"AvailabilityZone" : { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "RegionAvailabilityZone" ] },
 				"KeyName" : { "Ref" : "KeyName" },
+				"IamInstanceProfile" : { "Ref" : "JenkinsWindowsInstanceProfile" },
 				"ImageId" : { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "AMI" ] },
 				"InstanceType" : { "Ref" : "EC2InstanceType" },
 				"SecurityGroups" : [ { "Ref" :  "JenkinsWindowsSecurityGroup" } ],
 				"UserData" : {  "Fn::Base64" : { "Fn::Join" : [ "", [
 								"<powershell>\n",
 									"Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned \n",
-									"Import-Module AWSPowerShell \n",
-									"# Limited credential that can only read S3. \n",
-									"Set-AwsCredentials -AccessKey AKIAJN6VVRP7GRF2UTBQ  -SecretKey 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 \n",
+									"Import-Module AWSPowerShell \n",									
 									"New-Item -ItemType Directory -Path C:\\Users\\Public\\DevOps\\Deployment -Force | Out-Null \n",
 									"[Environment]::SetEnvironmentVariable('JENKINS_HOME', 'D:\\Jenkins', 'Machine') \n",
 									"Set-Location -Path C:\\Users\\Public\\DevOps\\Deployment \n",
