@@ -26,7 +26,7 @@
 			"Description" : "The identifer of an EC2 volume that will be attached to this instance.",
 			"Type"        : "AWS::EC2::Volume::Id",
 			"ConstraintDescription" : "Must be a valid EC2 Volume instance id (vol-XXXXX)"
-		},
+		},		
 		"Environment" : {
 			"Description" : "The Author-it environment name with which to associate this.",
 			"Type" : "String",
@@ -80,7 +80,7 @@
 	},
 
 	"Resources" : {
-		"JenkinsWindowsInstanceRole": {
+		"S3AccessRole": {
 			"Type": "AWS::IAM::Role",
 			"Properties": {
 				"AssumeRolePolicyDocument": {
@@ -96,6 +96,27 @@
 				"Path": "/"
 			}
 		},
+		"S3RolePolicies" : {
+			"Type" : "AWS::IAM::Policy",
+			"Properties" : {
+			"PolicyName" : "s3access",
+			"PolicyDocument" : {
+				"Statement" : [ {
+					"Effect" : "Allow",
+					"Action" : "s3:*",
+					"Resource" : "*"
+				}]
+			},
+			"Roles" : [ { "Ref" : "S3AccessRole" } ]
+			}
+		},
+		"S3InstanceProfile": {
+			"Type": "AWS::IAM::InstanceProfile",
+			"Properties": {
+				"Path": "/",
+				"Roles": [ { "Ref" : "S3AccessRole" } ]
+			}		
+		},		
 		"JenkinsWindowsSecurityGroup" : {
 			"Type" : "AWS::EC2::SecurityGroup",
 			"Properties" : {
@@ -140,37 +161,27 @@
 				]
 			}
 		},
-		"JenkinsWindowsInstanceProfile": {
-			"Type": "AWS::IAM::InstanceProfile",
-			"Properties": {
-				"Path": "/",
-				"Roles": [ { "Ref": "JenkinsWindowsInstanceRole" } ]
-			}		
-		},
+		
 		"EC2Instance" : {
 			"Type" : "AWS::EC2::Instance",
 			"Properties" : {
 				"AvailabilityZone" : { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "RegionAvailabilityZone" ] },
 				"KeyName" : { "Ref" : "KeyName" },
-				"IamInstanceProfile" : { "Ref" : "JenkinsWindowsInstanceProfile" },
+				"IamInstanceProfile" : { "Ref" : "S3InstanceProfile" },
 				"ImageId" : { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "AMI" ] },
 				"InstanceType" : { "Ref" : "EC2InstanceType" },
 				"SecurityGroups" : [ { "Ref" :  "JenkinsWindowsSecurityGroup" } ],
 				"UserData" : {  "Fn::Base64" : { "Fn::Join" : [ "", [
-								"<powershell>\n",
-									"Set-ExecutionPolicy -Scope LocalMachine -ExecutionPolicy RemoteSigned \n",
+								"<powershell>\n",																		
 									"Import-Module AWSPowerShell \n",									
-									"New-Item -ItemType Directory -Path C:\\Users\\Public\\DevOps\\Deployment -Force | Out-Null \n",
-									"[Environment]::SetEnvironmentVariable('JENKINS_HOME', 'D:\\Jenkins', 'Machine') \n",
+									"New-Item -ItemType Directory -Path C:\\Users\\Public\\DevOps\\Deployment -Force | Out-Null \n",									
 									"Set-Location -Path C:\\Users\\Public\\DevOps\\Deployment \n",
 									"Copy-S3Object -BucketName doerodney -Key downloads/jre/jre-8u65-windows-x64.exe -LocalFile C:\\Users\\Public\\DevOps\\Downloads\\JRE\\jre-8u65-windows-x64.exe -Force \n",
 									"Copy-S3Object -BucketName doerodney -Key downloads/jre/java.settings.cfg -LocalFile C:\\Users\\Public\\DevOps\\Downloads\\JRE\\java.settings.cfg \n",
-									"Copy-S3Object -BucketName doerodney -Key downloads/jenkins/1.637/windows/jenkins.msi -LocalFile C:\\Users\\Public\\DevOps\\Downloads\\Jenkins\\jenkins.msi \n",
-									"Start-Sleep -Seconds 5 \n",
-									"C:\\Users\\Public\\DevOps\\Downloads\\JRE\\jre-8u65-windows-x64.exe INSTALLCFG=C:\\Users\\Public\\DevOps\\Downloads\\JRE\\java.settings.cfg \n",
-									"Start-Sleep -Seconds 30 \n",
-									"msiexec /package C:\\Users\\Public\\DevOps\\Downloads\\Jenkins\\jenkins.msi /quiet \n",
-									"Start-Sleep -Seconds 30 \n",
+									"Copy-S3Object -BucketName doerodney -Key downloads/jenkins/1.637/windows/jenkins.msi -LocalFile C:\\Users\\Public\\DevOps\\Downloads\\Jenkins\\jenkins.msi \n",									
+									"C:\\Users\\Public\\DevOps\\Downloads\\JRE\\jre-8u65-windows-x64.exe INSTALLCFG=C:\\Users\\Public\\DevOps\\Downloads\\JRE\\java.settings.cfg \n",									
+									"[Environment]::SetEnvironmentVariable('JENKINS_HOME', 'D:\\Jenkins', 'Machine') \n",
+									"msiexec /package C:\\Users\\Public\\DevOps\\Downloads\\Jenkins\\jenkins.msi /quiet \n",									
 									"Start-Service -Name jenkins \n",
 								"</powershell>\n"
 							]
