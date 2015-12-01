@@ -70,7 +70,7 @@
 			},
 			"us-west-1" : {
 				"AMI" : "ami-91f93ad5",
-				"RegionAvailabilityZone" : "us-west-1c"
+				"RegionAvailabilityZone" : "us-west-1b"
 			},
 			"us-west-2" : {
 				"AMI" : "ami-f8f715cb",
@@ -85,13 +85,15 @@
 			"Properties": {
 				"AssumeRolePolicyDocument": {
 					"Version" : "2012-10-17",
-					"Statement": [ {
-					"Effect": "Allow",
-					"Principal": {
-					"Service": [ "ec2.amazonaws.com" ]
-					},
-					"Action": [ "sts:AssumeRole" ]
-					} ]
+					"Statement": [ 
+						{
+							"Effect": "Allow",
+							"Principal": {
+								"Service": [ "ec2.amazonaws.com" ]
+							},
+							"Action": [ "sts:AssumeRole" ]
+						} 
+					]
 				},
 				"Path": "/"
 			}
@@ -101,11 +103,13 @@
 			"Properties" : {
 			"PolicyName" : "s3access",
 			"PolicyDocument" : {
-				"Statement" : [ {
-					"Effect" : "Allow",
-					"Action" : "s3:*",
-					"Resource" : "*"
-				}]
+				"Statement" : [ 
+					{
+						"Effect" : "Allow",
+						"Action" : "s3:*",
+						"Resource" : "*"
+					}
+				]
 			},
 			"Roles" : [ { "Ref" : "S3AccessRole" } ]
 			}
@@ -176,9 +180,9 @@
 									"Import-Module AWSPowerShell \n",									
 									"New-Item -ItemType Directory -Path C:\\Users\\Public\\DevOps\\Deployment -Force | Out-Null \n",									
 									"Set-Location -Path C:\\Users\\Public\\DevOps\\Deployment | Out-Null \n",
-									"Copy-S3Object -BucketName doerodney -Key downloads/jre/jre-8u65-windows-x64.exe -LocalFile C:\\Users\\Public\\DevOps\\Downloads\\JRE\\jre-8u65-windows-x64.exe -Force  | Out-Null  \n",
-									"Copy-S3Object -BucketName doerodney -Key downloads/jre/java.settings.cfg -LocalFile C:\\Users\\Public\\DevOps\\Downloads\\JRE\\java.settings.cfg | Out-Null\n",
-									"Copy-S3Object -BucketName doerodney -Key downloads/jenkins/1.637/windows/jenkins.msi -LocalFile C:\\Users\\Public\\DevOps\\Downloads\\Jenkins\\jenkins.msi  | Out-Null \n",									
+									"Copy-S3Object -BucketName author-it-doit -Key downloads/jre/jre-8u65-windows-x64.exe -LocalFile C:\\Users\\Public\\DevOps\\Downloads\\JRE\\jre-8u65-windows-x64.exe -Force  | Out-Null  \n",
+									"Copy-S3Object -BucketName author-it-doit -Key downloads/jre/java.settings.cfg -LocalFile C:\\Users\\Public\\DevOps\\Downloads\\JRE\\java.settings.cfg | Out-Null\n",
+									"Copy-S3Object -BucketName author-it-doit -Key downloads/jenkins/1.637/windows/jenkins.msi -LocalFile C:\\Users\\Public\\DevOps\\Downloads\\Jenkins\\jenkins.msi  | Out-Null \n",									
 									"C:\\Users\\Public\\DevOps\\Downloads\\JRE\\jre-8u65-windows-x64.exe INSTALLCFG=C:\\Users\\Public\\DevOps\\Downloads\\JRE\\java.settings.cfg  | Out-Null \n",									
 									"[Environment]::SetEnvironmentVariable('JENKINS_HOME', 'D:\\Jenkins', 'Machine') \n",
 									"msiexec /package C:\\Users\\Public\\DevOps\\Downloads\\Jenkins\\jenkins.msi /quiet \n",									
@@ -227,6 +231,10 @@
 		"Environment" : {
 			"Value" : { "Ref" : "Environment" },
 			"Description" : "Value of the Environment parameter"
+		},
+		"SecurityGroup" : {
+			"Value" : { "Ref" : "JenkinsWindowsSecurityGroup" },
+			"Description" : "Security group created for this demonstration instance"
 		}
 	}
 }

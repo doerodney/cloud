@@ -1,0 +1,191 @@
+{
+    "Mappings": {
+        "RegionMap": {
+            "ap-northeast-1": {
+                "AMI": "ami-383c1956",
+                "RegionAvailabilityZone": "ap-northeast-1c"
+            },
+            "ap-southeast-1": {
+                "AMI": "ami-c9b572aa",
+                "RegionAvailabilityZone": "ap-southeast-1b"
+            },
+            "ap-southeast-2": {
+                "AMI": "ami-48d38c2b",
+                "RegionAvailabilityZone": "ap-southeast-2b"
+            },
+            "eu-central-1": {
+                "AMI": "ami-bc5b48d0",
+                "RegionAvailabilityZone": "eu-central-1b"
+            },
+            "eu-west-1": {
+                "AMI": "ami-bff32ccc",
+                "RegionAvailabilityZone": "eu-west-1c"
+            },
+            "sa-east-1": {
+                "AMI": "ami-6817af04",
+                "RegionAvailabilityZone": "sa-east-1c"
+            },
+            "us-east-1": {
+                "AMI": "ami-60b6c60a",
+                "RegionAvailabilityZone": "us-east-1e"
+            },
+            "us-west-1": {
+                "AMI": "ami-d5ea86b5",
+                "RegionAvailabilityZone": "us-west-1c"
+            },
+            "us-west-2": {
+                "AMI": "ami-f0091d91",
+                "RegionAvailabilityZone": "us-west-2c"
+            }
+        }
+    },
+    "Outputs": {
+        "AvailabilityZone": {
+            "Description": "Availability zone used with AWS region",
+            "Value": {
+                "Fn::FindInMap": [
+                    "RegionMap",
+                    {
+                        "Ref": "AWS::Region"
+                    },
+                    "RegionAvailabilityZone"
+                ]
+            }
+        },
+        "Environment": {
+            "Description": "Value of the Environment parameter",
+            "Value": {
+                "Ref": "Environment"
+            }
+        },
+        "JenkinsURL": {
+            "Description": "URL of the Jenkins instance.",
+            "Value": {
+                "Fn::Join": [
+                    "",
+                    [
+                        "http://",
+                        {
+                            "Fn::GetAtt": [
+                                "EC2Instance",
+                                "PublicIp"
+                            ]
+                        },
+                        ":8080"
+                    ]
+                ]
+            }
+        },
+        "Region": {
+            "Description": "AWS Region used for instantiation",
+            "Value": {
+                "Ref": "AWS::Region"
+            }
+        }
+    },
+    "Parameters": {
+        "EC2InstanceType": {
+            "AllowedValues": [
+                "t2.small",
+                "t2.micro",
+                "t2.medium",
+                "t2.large",
+                "m3.medium",
+                "m3.large"
+            ],
+            "ConstraintDescription": "Must be a valid EC2 instance type",
+            "Default": "t2.micro",
+            "Description": "EC2 instance type, reference this parameter to insure consistency",
+            "Type": "String"
+        },
+        "Environment": {
+            "AllowedValues": [
+                "TestAws",
+                "Dev",
+                "DevOps"
+            ],
+            "Default": "DevOps",
+            "Description": "The Author-it environment name with which to associate this.",
+            "Type": "String"
+        },
+        "KeyName": {
+            "Description": "Name of an existing EC2 KeyPair file (.pem) to use to create EC2 instances",
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        }
+    },
+    "Resources": {
+        "EC2Instance": {
+            "Properties": {
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "RegionMap",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        "AMI"
+                    ]
+                },
+                "InstanceType": {
+                    "Ref": "EC2InstanceType"
+                },
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "SecurityGroups": [
+                    {
+                        "Ref": "JenkinsLinuxSecurityGroup"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash -ex \n",
+                                "yum -y install java \n",
+                                "wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo \n",
+                                "rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key \n",
+                                "yum -y install jenkins \n",
+                                "service jenkins start \n",
+                                "chkconfig jenkins on \n"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "JenkinsLinuxSecurityGroup": {
+            "Properties": {
+                "GroupDescription": "Security Group for Jenkins on Linux.",
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 80,
+                        "IpProtocol": "tcp",
+                        "ToPort": 80
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 443,
+                        "IpProtocol": "tcp",
+                        "ToPort": 443
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 8080,
+                        "IpProtocol": "tcp",
+                        "ToPort": 8080
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        }
+    }
+}

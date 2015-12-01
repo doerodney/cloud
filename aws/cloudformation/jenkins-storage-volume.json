@@ -47,7 +47,7 @@
 				"RegionAvailabilityZone" : "us-east-1e"
 			},
 			"us-west-1" : {
-				"RegionAvailabilityZone" : "us-west-1c"
+				"RegionAvailabilityZone" : "us-west-1b"
 			},
 			"us-west-2" : {
 				"RegionAvailabilityZone" : "us-west-2c"
