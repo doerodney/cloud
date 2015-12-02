@@ -9,6 +9,12 @@ out_path = './WebAuthor.json'
 
 template = Template()
 
+#---Description----------------------------------------------------------------
+template.add_description("""Configures an autoscaling group for WebAuthor (AKA Huxley)""")
+
+#---Version--------------------------------------------------------------------
+template.add_version(version='2010-09-09')
+
 #---Parameters-----------------------------------------------------------------
 param_keyname = template.add_parameter(
     Parameter(
@@ -80,7 +86,7 @@ mapping_region_map = template.add_mapping(
             'AMI': 'ami-91f93ad5'
         },
         'us-west-2': {
-            'AMI': 'ami-f8f715cb'
+            'AMI': 'ami-xxxxxxxx'
         }
     }
 )
@@ -92,17 +98,17 @@ mapping_environment_attribute_map = template.add_mapping(
         'Corp': {
             'VpcId': 'vcp-xxxxxxxx',
             'PublicSubnetArray': ['subnet-xxxxxxxx','subnet-xxxxxxxx'],
-            'SSLCertificateId': 'GodaddyChainCert'
+            'SSLCertificateId': 'arn:aws:iam::724037942444:server-certificate/GodaddyChainCert'
         },
         'Dev': {
             'VpcId': 'vpc-79af551c',
             'PublicSubnetArray': ['subnet-054e9c60','subnet-0fbcae49'],
-            'SSLCertificateId': 'GodaddyChainCert'
+            'SSLCertificateId': 'arn:aws:iam::724037942444:server-certificate/GodaddyChainCert'
         },
         'Prod': {
             'VpcId': 'vcp-xxxxxxxx',
             'PublicSubnetArray': ['subnet-xxxxxxxx','subnet-xxxxxxxx'],
-            'SSLCertificateId': 'GodaddyChainCert'
+            'SSLCertificateId': 'arn:aws:iam::724037942444:server-certificate/GodaddyChainCert'
         }
     }
 )
@@ -156,13 +162,9 @@ load_balancer = template.add_resource(LoadBalancer(
             )
         ],
         LoadBalancerName='WebAuthorLoadBalancer',
-        SecurityGroups=[Ref(load_balancer_security_group)],
+        SecurityGroups=[Ref('WebAuthorLoadBalancerSecurityGroup')],
         Scheme='internet-facing',
-        Subnets=FindInMap('EnvironmentAttributeMap', Ref(param_environment), 'PublicSubnetArray'),
-        Tags=[
-            Tag('Purpose', 'WebAuthor', True),
-            Tag('Environment', Ref(param_environment), True)
-        ]
+        Subnets=FindInMap('EnvironmentAttributeMap', Ref(param_environment), 'PublicSubnetArray')
     )
 )
 
@@ -171,7 +173,7 @@ launch_configuration = template.add_resource(LaunchConfiguration(
         ImageId=FindInMap('RegionMap', Ref('AWS::Region'), 'AMI'),
         InstanceType=Ref(param_instance_type),
         KeyName=Ref(param_keyname),
-        SecurityGroups=Ref(load_balancer_security_group)
+        SecurityGroups=[Ref(load_balancer_security_group)]
     )
 )
 
@@ -180,8 +182,8 @@ autoscaling_group = template.add_resource(AutoScalingGroup(
         DesiredCapacity=2,
         HealthCheckGracePeriod=300,
         HealthCheckType='EC2',
-        LaunchConfigurationName='WebAuthorLaunchConfiguration',
-        LoadBalancerNames=Ref(load_balancer),
+        LaunchConfigurationName=Ref(launch_configuration),
+        LoadBalancerNames=[Ref(load_balancer)],
         MaxSize=2,
         MinSize=2,
         Tags=[
@@ -194,9 +196,16 @@ autoscaling_group = template.add_resource(AutoScalingGroup(
 
 #---Outputs--------------------------------------------------------------------
 template.add_output(Output(
-        'LoadBalancerCanonicalNameID',
+        'LoadBalancerCanonicalHostedZoneName',
+        Description='The name of the Amazon Route 53 hosted zone that is associated with the load balancer.',
+        Value=GetAtt(load_balancer, 'CanonicalHostedZoneName')
+    )
+)
+
+template.add_output(Output(
+        'LoadBalancerCanonicalHostedZoneNameID',
         Description='The ID of the Route 53 hosted zone name that is associated with the load balancer.',
-        Value=GetAtt(load_balancer, 'LoadBalancerCanonicalNameID')
+        Value=GetAtt(load_balancer, 'CanonicalHostedZoneNameID')
     )
 )
 
@@ -214,12 +223,6 @@ template.add_output(Output(
     )
 )
 
-template.add_output(Output(
-        'AvailabilityZone',
-        Description='Availability zone used with AWS region',
-        Value=FindInMap('RegionMap', Ref('AWS::Region'), 'RegionAvailabilityZone')
-    )
-)
 
 template.add_output(Output(
         'Environment',
