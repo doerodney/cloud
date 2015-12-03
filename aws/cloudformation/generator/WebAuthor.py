@@ -1,3 +1,13 @@
+# This script generates CloudFormation JSON with the troposphere library.
+# Advantages:  Clean, allows comments in code, examples included.
+# Disadvantages:  JSON section implemented alphabetical order,
+# not in 'traditional' order.  (Order is irrelevant in JSON.)
+# To use troposphere:
+# Install python 2.7.10 or later
+# The pip utility is in Python27/Scripts.
+# pip install troposphere
+# pip install awacs
+# Optional but helpful:  Install PyCharm Community Edition (Cost=0)
 from troposphere import Base64, FindInMap, GetAtt, Join
 from troposphere import Output, Parameter, Ref, Template
 from troposphere.autoscaling import AutoScalingGroup, LaunchConfiguration, Tag
@@ -10,7 +20,7 @@ out_path = './WebAuthor.json'
 template = Template()
 
 #---Description----------------------------------------------------------------
-template.add_description("""Configures an autoscaling group for WebAuthor (AKA Huxley)""")
+template.add_description('Configures an autoscaling group for WebAuthor (AKA Huxley)')
 
 #---Version--------------------------------------------------------------------
 template.add_version(version='2010-09-09')
@@ -29,14 +39,14 @@ param_instance_type = template.add_parameter(
         'EC2InstanceType',
         Description='EC2 instance type, reference this parameter to insure consistency',
         Type='String',
-        Default='t2.micro',
-        AllowedValues=[
-            't2.small',
-            't2.micro',
-            't2.medium',
-            't2.large',
-            'm3.medium',
-            'm3.large'
+        Default='t2.micro',     # Prices from (2015-12-03)
+        AllowedValues=[         # Source :  https://aws.amazon.com/ec2/pricing/
+            't2.small',         # $0.036/hour
+            't2.micro',         # $0.018/hour
+            't2.medium',        # $0.072/hour
+            't2.large',         # $0.134/hour
+            'm3.medium',        # $0.130/hour
+            'm3.large'          # $0.259/hour
         ],
         ConstraintDescription='Must be a valid EC2 instance type'
     )
@@ -89,7 +99,7 @@ mapping_region_map = template.add_mapping(
             'AMI': 'ami-xxxxxxxx'
         }
     }
-)
+);
 
 # Map attributes to environment.
 mapping_environment_attribute_map = template.add_mapping(
@@ -146,18 +156,18 @@ load_balancer = template.add_resource(LoadBalancer(
         CrossZone=True,
 
         HealthCheck=elb.HealthCheck(
-            Target='HTTP:80/',
             HealthyThreshold='5',
-            UnhealthyThreshold='2',
             Interval='20',
+            Target='HTTP:80/',
             Timeout='15',
+            UnhealthyThreshold='2',
         ),
         Listeners=[
             elb.Listener(
                 LoadBalancerPort='443',
                 InstancePort='80',
-                Protocol='HTTPS',
                 InstanceProtocol='HTTP',
+                Protocol='HTTPS',
                 SSLCertificateId=FindInMap('EnvironmentAttributeMap', Ref(param_environment), 'SSLCertificateId')
             )
         ],
@@ -234,7 +244,6 @@ template.add_output(Output(
 #---Generate CloudFormation template-------------------------------------------
 # Generate JSON.
 json = template.to_json()
-
 # Write JSON to console.
 print json
 
