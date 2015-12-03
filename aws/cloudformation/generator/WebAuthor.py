@@ -8,7 +8,6 @@
 # pip install troposphere
 # pip install awacs
 # Optional but helpful:  Install PyCharm Community Edition (Cost=0)
-import datetime
 from troposphere import Base64, FindInMap, GetAtt, Join
 from troposphere import Output, Parameter, Ref, Template
 from troposphere.autoscaling import AutoScalingGroup, LaunchConfiguration, Tag
@@ -16,11 +15,7 @@ from troposphere.elasticloadbalancing import LoadBalancer
 import troposphere.elasticloadbalancing as elb
 import troposphere.ec2 as ec2
 
-# Get timestamp to use to name resources.
-timestamp = datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d%H%M%S')
-
 out_path = './WebAuthor.json'
-
 
 template = Template()
 
@@ -129,12 +124,10 @@ mapping_environment_attribute_map = template.add_mapping(
 )
 
 #---Resources------------------------------------------------------------------
-# Allow http, https.
-
-name_load_balancer_security_group = 'WALdBlncrSecGrp%s' % timestamp
+# Allow SSH, http, https, and Jenkins on 8080
 load_balancer_security_group = template.add_resource(ec2.SecurityGroup(
-        name_load_balancer_security_group,
-        GroupDescription='Security Group for WebAuthor (Windows) (%s).' % timestamp,
+        'WebAuthorLoadBalancerSecurityGroup',
+        GroupDescription='Security Group for WebAuthor (Windows).',
         SecurityGroupIngress=
         [
             ec2.SecurityGroupRule(
@@ -154,9 +147,8 @@ load_balancer_security_group = template.add_resource(ec2.SecurityGroup(
     )
 )
 
-name_load_balancer = 'WALdBlncr%s' % timestamp
 load_balancer = template.add_resource(LoadBalancer(
-        name_load_balancer,
+        'WebAuthorLoadBalancer',
         ConnectionDrainingPolicy=elb.ConnectionDrainingPolicy(
             Enabled=True,
             Timeout=120
@@ -179,16 +171,14 @@ load_balancer = template.add_resource(LoadBalancer(
                 SSLCertificateId=FindInMap('EnvironmentAttributeMap', Ref(param_environment), 'SSLCertificateId')
             )
         ],
-        LoadBalancerName=name_load_balancer,
-        SecurityGroups=[Ref(load_balancer_security_group)],
+        SecurityGroups=[Ref('WebAuthorLoadBalancerSecurityGroup')],
         Scheme='internet-facing',
         Subnets=FindInMap('EnvironmentAttributeMap', Ref(param_environment), 'PublicSubnetArray')
     )
 )
 
-name_launch_configuration = 'WALnchCfg%s' % timestamp
 launch_configuration = template.add_resource(LaunchConfiguration(
-        name_launch_configuration,
+        'WebAuthorLaunchConfiguration',
         ImageId=FindInMap('RegionMap', Ref('AWS::Region'), 'AMI'),
         InstanceType=Ref(param_instance_type),
         KeyName=Ref(param_keyname),
@@ -196,9 +186,8 @@ launch_configuration = template.add_resource(LaunchConfiguration(
     )
 )
 
-name_autoscaling_group = 'WAAutoSclGrp%s' % timestamp
 autoscaling_group = template.add_resource(AutoScalingGroup(
-        name_autoscaling_group,
+        'WebAuthorAutoscalingGroup',
         DesiredCapacity=2,
         HealthCheckGracePeriod=300,
         HealthCheckType='EC2',
