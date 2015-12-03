@@ -158,21 +158,21 @@ load_balancer = template.add_resource(LoadBalancer(
         HealthCheck=elb.HealthCheck(
             HealthyThreshold='5',
             Interval='20',
-            Target='HTTP:80/',
+            Target='HTTPS:443/',
             Timeout='15',
             UnhealthyThreshold='2',
         ),
         Listeners=[
             elb.Listener(
                 LoadBalancerPort='443',
-                InstancePort='80',
-                InstanceProtocol='HTTP',
+                InstancePort='443',
+                InstanceProtocol='HTTPS',
                 Protocol='HTTPS',
                 SSLCertificateId=FindInMap('EnvironmentAttributeMap', Ref(param_environment), 'SSLCertificateId')
             )
         ],
         SecurityGroups=[Ref('WebAuthorLoadBalancerSecurityGroup')],
-        Scheme='internet-facing',
+        Scheme='internal',
         Subnets=FindInMap('EnvironmentAttributeMap', Ref(param_environment), 'PublicSubnetArray')
     )
 )
@@ -204,19 +204,6 @@ autoscaling_group = template.add_resource(AutoScalingGroup(
 )
 
 #---Outputs--------------------------------------------------------------------
-template.add_output(Output(
-        'LoadBalancerCanonicalHostedZoneName',
-        Description='The name of the Amazon Route 53 hosted zone that is associated with the load balancer.',
-        Value=GetAtt(load_balancer, 'CanonicalHostedZoneName')
-    )
-)
-
-template.add_output(Output(
-        'LoadBalancerCanonicalHostedZoneNameID',
-        Description='The ID of the Route 53 hosted zone name that is associated with the load balancer.',
-        Value=GetAtt(load_balancer, 'CanonicalHostedZoneNameID')
-    )
-)
 
 template.add_output(Output(
         'DNSName',
