@@ -1,3 +1,19 @@
+# This script generates CloudFormation JSON with the troposphere library.
+# Advantages:  Clean, allows comments in code, examples included.
+# Disadvantages:  JSON section implemented alphabetical order,
+# not in 'traditional' order.  (Order is irrelevant in JSON.)
+# To use troposphere:
+# Install python 2.7.10 or later
+# The pip utility is in Python27/Scripts.
+# pip install troposphere
+# pip install awacs
+# To get examples (highly useful):
+# mkdir /github (or where you prefer)
+# cd github
+# mkdir cloudtools
+# cd cloudtools
+# git clone https://github.com/cloudtools/troposphere.git
+# Optional but helpful:  Install PyCharm Community Edition (Cost=0)
 from troposphere import Base64, FindInMap, GetAtt, Join
 from troposphere import Output, Parameter, Ref, Template
 import troposphere.ec2 as ec2
@@ -135,7 +151,7 @@ ec2_instance = template.add_resource(ec2.Instance
         UserData=Base64(Join('',
                 [
                     '#!/bin/bash -ex \n',
-                    'yum -y install java \n',
+                    'y      um -y install java \n',
                     'wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo \n',
                     'rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key \n',
                     'yum -y install jenkins \n',
