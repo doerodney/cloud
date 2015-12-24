@@ -166,7 +166,7 @@ function New-Parameter
 
     if ($Default) { $hash['Default'] = $Default }
     if ($NoEcho) { $hash['NoEcho'] = $true }
-    if ($AllowedValues.Count -gt 0) { $hash['AllowedValues'] = $AllowedValues }
+    if ($AllowedValues.Count -gt 0) { $hash['AllowedValues'] = @($AllowedValues) }
     if ($AllowedPattern) { $hash['AllowedPattern'] = $AllowedPattern }
     if ($MaxLength) { $hash['MaxLength'] = $MaxLength }
     if ($MinLength) { $hash['MinLength'] = $MinLength }
@@ -187,15 +187,16 @@ function New-Parameter
 #---main----
 $template = New-CloudFormationTemplate -Description 'Test specimen'
 
-$parameter = New-Parameter -Name 'AvailabilityZone' -Type AWS::EC2::AvailabilityZone::Name -Description 'Availability Zone' -AllowedValues @(1,2,3)
+$parameter = New-Parameter -Name 'KeyName' -Type AWS::EC2::KeyPair::KeyName `
+    -Description 'Name of an existing EC2 KeyPair file (.pem) to use to create EC2 instances' `
+    -Default 'id_rsa_usw1_dev'
 Add-Parameter -Template $template -Parameter $parameter
 
-$parameter = New-Parameter -Name 'SubnetId' -Type AWS::EC2::Subnet::Id  -Description 'SubnetId' -AllowedValues @('subnet-abcd1234', 'subnet-4321dead')
+$parameter = New-Parameter -Name 'EC2InstanceType' -Type String -ConstraintDescription 'Must be a valid EC2 instance type' -Description 'EC2 instance type, reference this parameter to insure consistency' -Default 't2.micro' -AllowedValues @('t2.small', 't2.micro', 't2.medium', 't2.large', 'm3.medium', 'm3.large', 'c4.large' )   
 Add-Parameter -Template $template -Parameter $parameter
 
 $parameter = New-Parameter -Name 'ImageId' -Type AWS::EC2::Image::Id -Description 'The AMI to be used to generate the EC2 instance.' -Default 'ami-a99df5c9'
 Add-Parameter -Template $template -Parameter $parameter
 
 
-$template | ConvertTo-Json
- 
+$template | ConvertTo-Json -Depth 16
