@@ -15,8 +15,15 @@ function Add-Parameter
     # The value of the Parameters key is, you guessed it, a hash.
     # key = parameter name,
     # value = parameter object
-    $nameParameters = Get-NameParameters
-    $Template[$nameParameters].Add($Parameter['Name'], $Parameter)
+    $txtName = Get-TextName
+    $txtParameters = Get-TextParameters
+
+    $name = $Parameter[(Get-TextName)]
+    $propertySet = $Parameter[(Get-TextPropertySet)]
+    
+    $hashParams = $Template[$txtParameters]
+    # TODO:  Complain if name already exists.
+    $hashParams[$name] = $propertySet   
 }
 
 
@@ -34,14 +41,17 @@ function Add-Resource
 }
 
 
-function Get-NameAWSTemplateFormatVersion { 'AWSTemplateFormatVersion' }
-function Get-NameConditions { 'Conditions' }
-function Get-NameDescription { 'Description' } 
-function Get-NameMappings { 'Mappings' }
-function Get-NameMetadata { 'Metadata' }
-function Get-NameOutputs { 'Outputs' }
-function Get-NameParameters { 'Parameters' }
-function Get-NameResources { 'Resources' }
+function Get-TextAWSTemplateFormatVersion { 'AWSTemplateFormatVersion' }
+function Get-TextConditions { 'Conditions' }
+function Get-TextDescription { 'Description' } 
+function Get-TextMappings { 'Mappings' }
+function Get-TextMetadata { 'Metadata' }
+function Get-TextName { 'Name' }
+function Get-TextOutputs { 'Outputs' }
+function Get-TextParameters { 'Parameters' }
+function Get-TextPropertySet { 'PropertySet' }
+function Get-TextResources { 'Resources' }
+function Get-TextType{ 'Type' }
  
 
 function New-AWSResource
@@ -88,14 +98,16 @@ function New-CloudFormationTemplate
         [string] $AWSTemplateFormatVersion = '2010-09-09'
     )
 
+    # Initialize each section as an empty hash.
     $template = @{
-        (Get-NameAWSTemplateFormatVersion) = $AWSTemplateFormatVersion
-        (Get-NameDescription) = $Description
-        (Get-NameMetadata) = @{}
-        (Get-NameMappings) = @{}
-        (Get-NameConditions) = @{}
-        (Get-NameResources) = @{}
-        (Get-NameOutputs) = @{}
+        (Get-TextAWSTemplateFormatVersion) = $AWSTemplateFormatVersion
+        (Get-TextConditions) = @{}
+        (Get-TextDescription) = $Description
+        (Get-TextMappings) = @{}
+        (Get-TextMetadata) = @{}                       
+        (Get-TextOutputs) = @{}
+        (Get-TextParameters) = @{}
+        (Get-TextResources) = @{}
     }
     
     $template
@@ -106,7 +118,11 @@ function New-Parameter
 {
     [CmdletBinding()]
     param( 
+        
+        [Parameter(Mandatory=$true)]
         [string] $Name,
+
+        [Parameter(Mandatory=$true)]
         [ValidateSet('String', 
             'Number', 
             'List<Number>', 
@@ -134,7 +150,7 @@ function New-Parameter
 
         [string] $Default = $null,
         [switch] $NoEcho,
-        [string[]] $AllowedValues = @(),
+        [string[]] $AllowedValues = $null,
         [string] $AllowedPattern = $null,
         [int] $MaxLength = $null,
         [int] $MinLength = $null,
@@ -142,8 +158,10 @@ function New-Parameter
         [string] $ConstraintDescription = $null    
     )
 
+    $txtType = Get-TextType
+
     $hash = @{
-        'Type' = $Type  
+        $txtType = $Type  
     }
 
     if ($Default) { $hash['Default'] = $Default }
@@ -157,16 +175,27 @@ function New-Parameter
         $hash['ConstraintDescription'] = $ConstraintDescription 
     }
 
-    $parameter = @{ $Name = $hash }
+    $txtName = Get-TextName
+    $txtPropertySet = Get-TextPropertySet
+
+    $parameter = @{ $txtName = $Name; $txtPropertySet = $hash }
 
     $parameter
 }
 
-$parameter = New-Parameter -Name 'Tuna' -Type AWS::EC2::AvailabilityZone::Name `
-    -Description 'Availability Zone' `
-    -AllowedValues @(1,2,3)
-$parameter | ConvertTo-Json
 
-#$template = New-CloudFormationTemplate
-#$template | ConvertTo-Json
+#---main----
+$template = New-CloudFormationTemplate -Description 'Test specimen'
+
+$parameter = New-Parameter -Name 'AvailabilityZone' -Type AWS::EC2::AvailabilityZone::Name -Description 'Availability Zone' -AllowedValues @(1,2,3)
+Add-Parameter -Template $template -Parameter $parameter
+
+$parameter = New-Parameter -Name 'SubnetId' -Type AWS::EC2::Subnet::Id  -Description 'SubnetId' -AllowedValues @('subnet-abcd1234', 'subnet-4321dead')
+Add-Parameter -Template $template -Parameter $parameter
+
+$parameter = New-Parameter -Name 'ImageId' -Type AWS::EC2::Image::Id -Description 'The AMI to be used to generate the EC2 instance.' -Default 'ami-a99df5c9'
+Add-Parameter -Template $template -Parameter $parameter
+
+
+$template | ConvertTo-Json
  
