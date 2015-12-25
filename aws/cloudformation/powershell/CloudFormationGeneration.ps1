@@ -199,4 +199,4 @@ $parameter = New-Parameter -Name 'ImageId' -Type AWS::EC2::Image::Id -Descriptio
 Add-Parameter -Template $template -Parameter $parameter
 
 
-$template | ConvertTo-Json -Depth 16
+$template | ConvertTo-Json -Depth 16  # Depth is important
