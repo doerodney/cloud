@@ -80,7 +80,7 @@ function New-Parameter
 
     if ($Default) { $hash['Default'] = $Default }
     if ($NoEcho) { $hash['NoEcho'] = $true }
-    if ($AllowedValues.Count -gt 0) { $hash['AllowedValues'] = @($AllowedValues) }
+    if (@($AllowedValues).Count -gt 0) { $hash['AllowedValues'] = @($AllowedValues) }
     if ($AllowedPattern) { $hash['AllowedPattern'] = $AllowedPattern }
     if ($MaxLength) { $hash['MaxLength'] = $MaxLength }
     if ($MinLength) { $hash['MinLength'] = $MinLength }

@@ -1,0 +1,35 @@
+{
+  "builders": [
+    {
+		"ami_name": "Web Author Core 2015-12-26-1418",
+		"communicator": "winrm",
+		"instance_type": "t1.micro",
+		"region": "us-west-2",
+		"source_ami": "ami-b25e42d3",
+		"type": "amazon-ebs",
+		"user_data_file": "{{template_dir}}/setup_winrm.txt",
+		"winrm_username":  "Administrator"
+    }
+  ],
+
+  "provisioners": [
+	{
+		"type": "file",
+		"source": "C:\\github\\doerodney\\cloud\\aws\\packer\\NDP46-KB3045557-x86-x64-AllOS-ENU.exe",
+		"destination":  "C:\\Users\\Public\\DevOps\\Uploads\\packer\\NDP46-KB3045557-x86-x64-AllOS-ENU.exe"     
+	},
+	{
+		"type": "file",
+		"source":   "C:\\github\\doerodney\\cloud\\aws\\packer\\Win8.1AndW2K12R2-KB3066437-x64.msu",
+		"destination":  "C:\\Users\\Public\\DevOps\\Uploads\\Win8.1AndW2K12R2-KB3066437-x64.msu"
+	},
+    {
+        "type": "powershell",
+        "inline": [
+			"dir c:\\",
+			"C:\\Users\\Public\\DevOps\\Uploads\\packerNDP46-KB3045557-x86-x64-AllOS-ENU.exe"
+		],
+		"start_retry_timeout": "15m"
+    }
+  ]
+}
