@@ -2,7 +2,7 @@
 
 . .\LibText.ps1
 
-function Add-ParameterTemplate
+function Add-ParameterItem
 {
     [CmdletBinding()]
     
@@ -28,7 +28,7 @@ function Add-ParameterTemplate
 }
 
 
-function New-ParameterTemplate
+function New-ParameterItem
 {
     [CmdletBinding()]
     param( 
