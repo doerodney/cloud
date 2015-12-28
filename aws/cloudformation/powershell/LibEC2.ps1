@@ -41,14 +41,32 @@ function New-EC2InstanceItem
         [string] $Name,
 
         [string] $AvailabilityZone = $null,
-        
+
+        [hashtable] $BlockDeviceMappings = $null,
+
+        [boolean] $DisableApiTermination = $null,
+
+        [boolean] $EbsOptimized = $null,
+
+        [string] $IamInstanceProfile = $null,
+
         [Parameter(Mandatory=$true)]
         [string] $ImageId,
+
+        [ValidateSet('stop', 'terminate')]
+        [string] $InstanceInitiatedShutdownBehavior = $null,        
 
         [ValidateSet('m1.small',
             'm3.medium', 'm3.large',
             't2.micro', 't2.small', 't2.medium', 't2.large')]
         [string] $InstanceType = 'm1.small',
+
+        [string] $KernelId = $null,
+
+        [Parameter(Mandatory=$true)]
+        [string] $KeyName,
+
+        [boolean] $Monitoring = $null,
 
         [string[]] $SecurityGroupIds = $null,
 
@@ -60,17 +78,41 @@ function New-EC2InstanceItem
 
     $txtType = Get-TextType
 
+    # Add required values to the hash. 
     $hash = @{
         (Get-TextType) = 'AWS::EC2::Instance'
         (Get-TextImageId) = $ImageId
         (Get-TextInstanceType) = $InstanceType
+        (Get-TextKeyName) = $KeyName
+        
     }
 
     # Add optional args as defined. 
     if ($AvailabilityZone) {
         $hash[(Get-TextAvailabilityZone)] = $AvailabilityZone
-    }     
-    
+    }
+    if ($BlockDeviceMappings) {
+        $hash[(Get-TextBlockDeviceMappings)] = $BlockDeviceMappings
+    }
+    if ($DisableApiTermination) {
+        $hash[(Get-TextDisableApiTermination)] = $DisableApiTermination  
+    }
+    if ($EbsOptimized) {
+        $hash[(Get-TextEbsOptimized)] = $EbsOptimized
+    }
+    if ($IamInstanceProfile) {
+        $hash[(Get-TextIamInstanceProfile)] = $IamInstanceProfile
+    }
+    if ($InstanceInitiatedShutdownBehavior) {
+        $hash[(Get-TextInstanceInitiatedShutdownBehavior)] = $InstanceInitiatedShutdownBehavior
+    }
+    if ($KernelId) {
+        $hash[(Get-TextKernelId)] = $KernelId   
+    }
+    if ($Monitoring) {
+        $hash[(Get-TextMonitoring)] = $Monitoring
+    }
+
     
     $resource = @{ (Get-TextName) = $Name; $txtPropertySet = $hash }
 

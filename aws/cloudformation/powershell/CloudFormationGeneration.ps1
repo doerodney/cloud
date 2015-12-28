@@ -22,7 +22,7 @@ $parameter = New-ParameterItem -Name 'ImageId' -Type AWS::EC2::Image::Id -Descri
 Add-ParameterItem -Template $template -Parameter $parameter
 
 #---resources---
-$resource = New-EC2InstanceItem -Name EC2Instance -ImageId ami-4321dead
+$resource = New-EC2InstanceItem -Name EC2Instance -ImageId ami-4321dead -KeyName id_rsa_usw1_dev
 Add-ResourceItem -Template $template -Item $resource
  
 #---generation-----------------------------------------------------------------
