@@ -1,12 +1,9 @@
-﻿Set-StrictMode -Version Latest
+Set-StrictMode -Version Latest
 
-. .\LibCloudFormationTemplate.ps1
-. .\LibEC2.ps1
-. .\LibParameter.ps1
-. .\LibText.ps1
+Import-Module CFGen
 
 #---main-----------------------------------------------------------------------
-$template = New-CloudFormationTemplate -Description 'Test specimen'
+$template = New-CFGenTemplate -Description 'Creates an auto-scaling group.'
 
 
 #---parameters-----------------------------------------------------------------
