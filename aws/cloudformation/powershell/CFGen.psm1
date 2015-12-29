@@ -2,6 +2,20 @@ Set-StrictMode -Version Latest
 
 function Add-ParameterItem
 {
+<#
+.SYNOPSIS
+Adds a parameter to a template.
+.DESCRIPTION
+Adds a parameter object created by New-ParameterItem to a template object created by New-CFGenTemplate.
+.PARAMETER Template
+An object created by New-CFGenTemplate that contains objects to generate into a CloudFormation template.
+.PARAMETER Parameter
+A parameter object created by New-ParameterItem that describes a parameter in a CloudFormation template.
+.EXAMPLE
+$template = New-CFGenTemplate -Description 'Template for a demonstration project.'
+$param = New-ParameterItem -Name KeyName -Type AWS::EC2::KeyPair::KeyName -Description 'Name of an existing EC2 KeyPair file (.pem) to use to create EC2 instances.' 
+Add-ParamterItem -Template $template -Parameter $param
+#>
     [CmdletBinding()]
     
     param(
